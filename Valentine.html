@@ -1,0 +1,232 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Valentine Surprise</title>
+  <style>
+    :root{
+      --pink1:#ff4d6d;
+      --pink2:#ff8fab;
+      --text:#222;
+      --muted:#666;
+      --card:#ffffff;
+      --shadow: 0 18px 45px rgba(0,0,0,.20);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(circle at top, var(--pink2), var(--pink1));
+      color: var(--text);
+    }
+
+    /* Center card like the reference */
+    .wrap{
+      width:min(520px, 92vw);
+      background: rgba(255,255,255,.90);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topline{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      font-weight:700;
+      margin-bottom: 10px;
+    }
+
+    h2{
+      margin: 10px 0 8px;
+      font-size: 28px;
+      text-align:center;
+    }
+    .sub{
+      margin:0 0 14px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* Button row in the reference is centered */
+    .btnRow{
+      display:flex;
+      gap: 18px;
+      justify-content:center;
+      align-items:center;
+      margin: 18px 0 12px;
+      position: relative;
+      height: 70px; /* gives room for the dodging No */
+    }
+
+    button{
+      border:0;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor:pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,.12);
+      transition: transform .12s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+    }
+    button:active{ transform: scale(.98); }
+
+    #yesBtn{
+      background:#22c55e;
+      color:#fff;
+      position: relative;
+      z-index: 2;
+    }
+
+    #noBtn{
+      background:#ef4444;
+      color:#fff;
+      position: absolute; /* so it can dodge inside btnRow */
+      left: calc(50% + 70px);
+      top: 12px;
+      z-index: 1;
+    }
+
+    .fromLine{
+      text-align:center;
+      margin-top: 6px;
+      font-weight:600;
+    }
+
+    /* Success view matches reference content */
+    .success{
+      display:none;
+      margin-top: 14px;
+      text-align:center;
+      padding-top: 8px;
+    }
+    .success h2{
+      margin-top: 6px;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .gif{
+      width:min(340px, 86%);
+      border-radius: 14px;
+      box-shadow: 0 12px 25px rgba(0,0,0,.14);
+      display:block;
+      margin: 0 auto 10px;
+    }
+    .success p{
+      margin: 6px 0;
+      font-size: 16px;
+    }
+    .success .small{
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    /* Make it feel like a single-screen experience */
+    .divider{
+      height:1px;
+      background: rgba(0,0,0,.08);
+      margin: 14px 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap" id="wrap">
+    <div class="topline">Escape Attempts: <span id="attempts">0</span></div>
+
+    <div id="askView">
+      <h2>Will you be my valentine?</h2>
+      <p class="sub">Choose wisely...</p>
+
+      <div class="btnRow" id="btnRow">
+        <button id="yesBtn" type="button">Yes!</button>
+        <button id="noBtn" type="button">No</button>
+      </div>
+
+      <div class="fromLine">From: <span id="fromName">Someone Special</span></div>
+    </div>
+
+    <div class="success" id="successView">
+      <div class="divider"></div>
+      <h2>I knew it!</h2>
+
+      <!-- Same celebration GIF URL seen on the reference page -->
+      <img
+        class="gif"
+        alt="Celebration"
+        src="https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif"
+      />
+
+      <p><b>Congratulations!</b></p>
+      <p>forever and always!</p>
+      <p class="small">(We both knew you'd say yes eventually )</p>
+    </div>
+  </div>
+
+<script>
+  // URL format like the reference: ?from=A
+  const params = new URLSearchParams(window.location.search);
+  const from = (params.get("from") || "Someone Special").slice(0, 60);
+  document.getElementById("fromName").textContent = from;
+
+  const attemptsEl = document.getElementById("attempts");
+  const btnRow = document.getElementById("btnRow");
+  const noBtn = document.getElementById("noBtn");
+  const yesBtn = document.getElementById("yesBtn");
+  const askView = document.getElementById("askView");
+  const successView = document.getElementById("successView");
+
+  let attempts = 0;
+
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+  function dodgeNo(){
+    attempts += 1;
+    attemptsEl.textContent = String(attempts);
+
+    const area = btnRow.getBoundingClientRect();
+    const b = noBtn.getBoundingClientRect();
+
+    const pad = 6;
+    const maxX = area.width - b.width - pad;
+    const maxY = area.height - b.height - pad;
+
+    const x = Math.random() * maxX + pad;
+    const y = Math.random() * maxY + pad;
+
+    // position relative to btnRow
+    noBtn.style.left = `${clamp(x, pad, maxX)}px`;
+    noBtn.style.top  = `${clamp(y, pad, maxY)}px`;
+  }
+
+  // Make No dodge on hover (desktop) and touch/click (mobile)
+  noBtn.addEventListener("mouseenter", dodgeNo);
+  noBtn.addEventListener("click", dodgeNo);
+  noBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    dodgeNo();
+  }, { passive:false });
+
+  yesBtn.addEventListener("click", () => {
+    // Match the simple “reveal below” feel
+    successView.style.display = "block";
+    // Optional: scroll a tiny bit so the success is visible on small screens
+    successView.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  // Small initial tease like many versions
+  setTimeout(dodgeNo, 350);
+</script>
+</body>
+</html>
